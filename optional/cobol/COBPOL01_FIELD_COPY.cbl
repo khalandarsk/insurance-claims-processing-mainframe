@@ -1,0 +1,60 @@
+*----------------------------------------------------------------*
+* PROGRAM NAME : COBPOL01_FIELD_COPY                              *
+* PURPOSE      : Optional field-by-field load of Policy Master    *
+* NOTE         : Alternative to IDCAMS REPRO when validation or   *
+*                layout changes are required                      *
+*----------------------------------------------------------------*
+IDENTIFICATION DIVISION.
+PROGRAM-ID. COBPOL01_FIELD_COPY.
+
+ENVIRONMENT DIVISION.
+FILE-CONTROL.
+ SELECT POL-IN ASSIGN TO DDIN
+   ORGANIZATION IS SEQUENTIAL.
+ SELECT POL-VSAM ASSIGN TO DDOUT
+   ORGANIZATION IS INDEXED
+   RECORD KEY IS OUT-POLICY-NO
+   FILE STATUS IS WS-FS.
+
+DATA DIVISION.
+FILE SECTION.
+FD POL-IN.
+01 IN-REC.
+   05 IN-POLICY-NO  PIC X(10).
+   05 IN-NAME       PIC X(30).
+   05 IN-TYPE       PIC X(02).
+   05 IN-AMOUNT     PIC 9(7)V99.
+   05 IN-STATUS     PIC X.
+   05 FILLER        PIC X(28).
+
+FD POL-VSAM.
+01 OUT-REC.
+   05 OUT-POLICY-NO PIC X(10).
+   05 OUT-NAME      PIC X(30).
+   05 OUT-TYPE      PIC X(02).
+   05 OUT-AMOUNT    PIC 9(7)V99.
+   05 OUT-STATUS    PIC X.
+   05 FILLER        PIC X(28).
+
+WORKING-STORAGE SECTION.
+01 WS-FS PIC XX.
+01 EOF   PIC X VALUE 'N'.
+
+PROCEDURE DIVISION.
+ OPEN INPUT POL-IN OUTPUT POL-VSAM
+
+ PERFORM UNTIL EOF = 'Y'
+   READ POL-IN
+     AT END MOVE 'Y' TO EOF
+     NOT AT END
+       MOVE IN-POLICY-NO TO OUT-POLICY-NO
+       MOVE IN-NAME      TO OUT-NAME
+       MOVE IN-TYPE      TO OUT-TYPE
+       MOVE IN-AMOUNT    TO OUT-AMOUNT
+       MOVE IN-STATUS    TO OUT-STATUS
+       WRITE OUT-REC
+   END-READ
+ END-PERFORM
+
+ CLOSE POL-IN POL-VSAM
+ STOP RUN.
